@@ -2,6 +2,8 @@
  * The Car Computer
  * ----------------
  * Tracks everywhere the car goes
+ * In the future:
+ *  - Will interface with the OBD port
  */
 
 #include <NewSoftSerial.h>
