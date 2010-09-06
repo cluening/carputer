@@ -1,5 +1,7 @@
 /*
  * The Car Computer
+ * ----------------
+ * Tracks everywhere the car goes
  */
 
 #include <NewSoftSerial.h>
