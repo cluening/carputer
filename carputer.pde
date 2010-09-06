@@ -1,3 +1,7 @@
+/*
+ * The Car Computer
+ */
+
 #include <NewSoftSerial.h>
 #include <TinyGPS.h>
 #include <Fat16.h>
