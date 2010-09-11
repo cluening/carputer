@@ -1,0 +1,21 @@
+Lines:
+D0  RX
+D1  TX
+D2  GPS RX
+D3  GPS TX
+D4  ethernet on-board microSD SPI CS
+D5  
+D6  
+D7  
+D8  microSD SPI CS
+D9  
+D10 ethernet SPI CS
+D11 SPI MOSI
+D12 SPI MISO
+D13 SPI SCK
+A0
+A1
+A2
+A3
+A4
+A5
