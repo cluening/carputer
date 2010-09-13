@@ -1,4 +1,17 @@
-Lines:
+Umbilicus lines
+---------------
+1 +5
+2 GND
+3 LCD RX
+4 up
+5 down
+6 button
+7
+8
+
+
+Arduino Lines
+-------------
 D0  RX
 D1  TX
 D2  GPS RX
@@ -13,7 +26,7 @@ D10 ethernet SPI CS
 D11 SPI MOSI
 D12 SPI MISO
 D13 SPI SCK
-A0
+A0  Trunk temperature (?)
 A1
 A2
 A3
