@@ -16,6 +16,7 @@
 
 TinyGPS gps;
 NewSoftSerial nss(2, 3);
+NewSoftSerial lcd(255, 7);
 SdCard card;
 Fat16 file;
 bool fileisopen;
@@ -64,6 +65,10 @@ void setup(){
   if(!card.init(1, 8)) error("card.init");
   Fat16::init(&card);
 
+  lcd.begin(9600);
+  lcdclear();
+  lcd.print("Awaiting fix...");
+
 #if DEBUG == 1
   Serial.println("Awaiting fix...");
 #endif
@@ -110,6 +115,16 @@ void loop(){
       }
     }
 
+    lcdclear();
+    //lcd.print("Speed: "); lcd.print(speed, 1);
+    lcd.print(lat, 5);
+    //lcdcommand(); lcd.print(0x80|(0x40), BYTE);
+    lcdsetpos(1, 0);
+    lcd.print(lon, 5);
+    lcdsetpos(0, 10);
+    lcd.print(speed, 1);
+    lcd.print("mph");
+
     if(calc_dist(prevlat, prevlon, lat, lon) > 10){
       file.print(lat, 6);      file.print(" ");
       file.print(lon, 6);      file.print(" ");
@@ -153,6 +168,26 @@ bool feedgps()
   }
   return false;
 }
+
+// Some LCD helper functions
+void lcdsetpos(uint8_t row, uint8_t col)
+{
+  int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
+
+  lcdcommand();
+  lcd.print(0x80 | (col + row_offsets[row]), BYTE);
+}
+
+void lcdclear(){
+  lcdcommand();
+  lcd.print(0x01, BYTE);
+}
+
+void lcdcommand(){
+  lcd.print(0xFE, BYTE);
+}
+// End LCD helper functions
+
 
 // Sets the filename to the given date.  Expects that the character
 // buffer is already primed with '.txt\0' at the end.
