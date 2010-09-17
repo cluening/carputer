@@ -1,7 +1,7 @@
 Umbilicus lines
 ---------------
-1 +5
-2 GND
+1 GND
+2 +5
 3 LCD RX
 4 up
 5 down
@@ -19,7 +19,7 @@ D3  GPS TX
 D4  ethernet on-board microSD SPI CS
 D5  
 D6  
-D7  
+D7  LCD RX
 D8  microSD SPI CS
 D9  
 D10 ethernet SPI CS
