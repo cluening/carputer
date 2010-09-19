@@ -2,13 +2,12 @@ Umbilicus lines
 ---------------
 1 GND
 2 +5
-3 LCD RX
-4 up
-5 down
-6 button
+3 up
+4 down
+5 button
+6 LCD RX
 7
 8
-
 
 Arduino Lines
 -------------
@@ -16,13 +15,13 @@ D0  RX
 D1  TX
 D2  GPS RX
 D3  GPS TX
-D4  ethernet on-board microSD SPI CS
-D5  
-D6  
+D4  up
+D5  down
+D6  button
 D7  LCD RX
 D8  microSD SPI CS
 D9  
-D10 ethernet SPI CS
+D10 
 D11 SPI MOSI
 D12 SPI MISO
 D13 SPI SCK
@@ -32,3 +31,15 @@ A2
 A3
 A4
 A5
+
+Data fields
+-----------
+Date
+time
+latitude
+longitude
+speed
+heading
+altitude
+odometer
+

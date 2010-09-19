@@ -12,7 +12,17 @@
 #include <Fat16util.h>
 
 #define STATUSLED 13
-#define DEBUG 0
+#define DEBUG 1
+
+#define UPPIN 4
+#define DOWNPIN 5
+#define BUTTONPIN 6
+
+#define STATIC 0
+#define ROTATING 1
+#define MENU 2
+
+#define rarrow 0x7E
 
 TinyGPS gps;
 NewSoftSerial nss(2, 3);
@@ -22,7 +32,13 @@ Fat16 file;
 bool fileisopen;
 char filename[13] = "00000000.txt";
 float prevlat, prevlon;
-
+int screen = 0;
+byte displaystyle = ROTATING, prevdisplaystyle = ROTATING;
+byte numscreens = 2;
+unsigned long screenmillis = 0;
+byte upstate, downstate, buttonstate;
+byte curoption = 0;
+  
 bool feedgps();
 
 // SD Helpers
@@ -44,6 +60,8 @@ void error_P(const char* str) {
 
 void error_C(const char *str) {
   digitalWrite(STATUSLED, HIGH);
+  lcdclear();
+  lcd.print("SD Error");
   while(1);
 }
 // End SD Helpers
@@ -65,6 +83,11 @@ void setup(){
   if(!card.init(1, 8)) error("card.init");
   Fat16::init(&card);
 
+  // Initialize the roller ball
+  upstate = (digitalRead(UPPIN));
+  downstate = (digitalRead(DOWNPIN));
+  buttonstate = HIGH;
+
   lcd.begin(9600);
   lcdclear();
   lcd.print("Awaiting fix...");
@@ -76,24 +99,75 @@ void setup(){
 
 void loop(){
   bool newdata = false;
-  unsigned long start = millis();
+  unsigned long curmillis;
   float lat, lon;
-  float alt, speed;
+  float alt, speed, course;
   unsigned long age;
   int year; 
-  byte month, day, hour, minute, second;
+  byte month, day, hour, minute, second, tzhour;
+  float min, sec;
+
+  static byte upcount = 0;
+  static byte downcount = 0;
+
+  // Check roller
+  if(digitalRead(UPPIN) == !upstate){
+    if(displaystyle == MENU){
+      upcount++;
+      if(upcount > 5){
+        if(curoption > 0) curoption--;
+        upcount = 0;
+      }
+    }
+    upstate = !upstate;
+#if DEBUG == 1
+    Serial.print("Up! ");
+    Serial.println((int)curoption);
+#endif
+  }
+  if(digitalRead(DOWNPIN) == !downstate){
+    if(displaystyle == MENU){
+      downcount++;
+      if(downcount > 5){
+        curoption++;
+        downcount = 0;
+      }
+    }
+    downstate = !downstate;
+#if DEBUG == 1
+    Serial.print("Down! ");
+    Serial.println((int)curoption);
+#endif
+  }
+  if(digitalRead(BUTTONPIN) == !buttonstate){
+    buttonstate = !buttonstate;
+    if(buttonstate == LOW){
+#if DEBUG == 1
+      Serial.println("Clicked!");
+#endif
+      if(displaystyle != MENU){
+        prevdisplaystyle = displaystyle;
+        displaystyle = MENU;
+      }else{
+        if(curoption == 2){
+          displaystyle = prevdisplaystyle;
+        }
+      }
+    }
+  }
   
-  while(millis() - start < 1000){
+  //while(millis() - start < 1000){
     if(feedgps()){
       newdata = true;
     }
-  }
+  //}
   
   if(newdata){
     digitalWrite(STATUSLED, HIGH);
     gps.f_get_position(&lat, &lon, &age);
     alt = gps.f_altitude() * 3.2808399; // meters to feet
     speed = gps.f_speed_mph();
+    course = gps.course();
     if(speed < 1){
       speed = 0;
     }
@@ -115,16 +189,58 @@ void loop(){
       }
     }
 
-    lcdclear();
-    //lcd.print("Speed: "); lcd.print(speed, 1);
-    lcd.print(lat, 5);
-    //lcdcommand(); lcd.print(0x80|(0x40), BYTE);
-    lcdsetpos(1, 0);
-    lcd.print(lon, 5);
-    lcdsetpos(0, 10);
-    lcd.print(speed, 1);
-    lcd.print("mph");
+    if(displaystyle == MENU){
+      showmenu();
+    }else{
+      if(displaystyle == ROTATING){
+        curmillis = millis();
+        if(curmillis - screenmillis > 5000){
+          screen++;
+          screen %= numscreens;
+          screenmillis = curmillis;
+        }
+      }
 
+      /* Display the proper screen */
+      if(screen == 0){
+        /* Default screen */
+        lcdclear();
+        tzhour = (hour - 6 + 24) % 24;
+        if(tzhour < 10) lcd.print("0");
+        if(tzhour > 12){
+          lcd.print((int)tzhour - 12);
+        }else if(tzhour == 0){
+          lcd.print(12);
+        }else{
+          lcd.print((int)tzhour);
+        }
+        lcd.print(":"); 
+        if(minute < 10) lcd.print("0");
+        lcd.print((int)minute);
+        if(tzhour > 11){
+          lcd.print("pm");
+        }else{
+         lcd.print("am");
+        }
+        lcdsetpos(0, 9);
+        if(speed < 10) lcd.print(" ");
+        lcd.print(speed, 1);
+        lcd.print("mph");
+      }else if(screen == 1){
+        /* Latitude/Longitude */
+        //lcdclear();
+        lcdsetpos(0, 0);
+        lcd.print("Lat: ");
+        lcdprintdms(lat);
+        lcdsetpos(1, 0);
+        lcd.print("Lon: ");
+        lcdprintdms(lon);
+      }else{
+        lcdclear();
+        lcd.print("Invalid screen");
+      }
+    }
+    
     if(calc_dist(prevlat, prevlon, lat, lon) > 10){
       file.print(lat, 6);      file.print(" ");
       file.print(lon, 6);      file.print(" ");
@@ -159,6 +275,45 @@ void loop(){
   }
 }
 
+/* Menu Bits */
+void showmenu(){
+  byte numoptions = 3;
+  char *options[] = {
+    "Display Style",
+    "Nothing",
+    "Return"
+  };
+
+  if(curoption >= numoptions){
+    curoption = numoptions - 1;
+  }
+  if(curoption <=0){
+    curoption = 0;
+  }
+
+  lcdclear();
+  lcdsetpos(0, 0);
+  lcd.print("  ");
+  if(curoption == 0){
+    lcd.print("-Main Menu-");
+  }else{
+    lcd.print(options[curoption-1]);
+  }
+  lcdsetpos(1, 0);
+  lcd.print(rarrow, BYTE);
+  lcd.print(" ");
+  lcd.print(options[curoption]);  
+}
+
+void showsubmenu(byte top){
+  
+}
+
+void showsubsubmenu(byte top, byte sub){
+  
+}
+/* End Menu Bits */
+
 bool feedgps()
 {
   while (nss.available())
@@ -186,6 +341,21 @@ void lcdclear(){
 void lcdcommand(){
   lcd.print(0xFE, BYTE);
 }
+
+void lcdprintdms(float deg){
+  float min, sec;
+  
+  min = fabs(60.0*(deg - int(deg)));
+  sec = 60.0*(min - int(min));
+  if(deg > 0) lcd.print(" ");
+  if(abs(deg) < 100) lcd.print(" ");
+  if(abs(deg) < 10) lcd.print(" ");
+  lcd.print(int(deg));lcd.print(0xDF, BYTE);
+  if(min < 10) lcd.print("0");
+  lcd.print(int(min));lcd.print("'");
+  if(sec < 10) lcd.print("0");
+  lcd.print(int(sec));lcd.print('"'); 
+}
 // End LCD helper functions
 
 
@@ -207,7 +377,7 @@ void setfilename(char *filename, int year, int month, int day){
 }
 
 /*************************************************************************
- * //Function to calculate the distance between two waypoints
+ * Function to calculate the distance between two waypoints
  * Stolen from the arduino forums
  *************************************************************************/
 float calc_dist(float flat1, float flon1, float flat2, float flon2) {
@@ -233,9 +403,5 @@ float calc_dist(float flat1, float flon1, float flat2, float flon2) {
 
   dist_calc*=20902231.0; //Converting to feet
 
-#if DEBUG == 1
-  Serial.print("Distance: ");
-  Serial.println(dist_calc);
-#endif
   return dist_calc;
 }
