@@ -10,19 +10,7 @@
 #include <TinyGPS.h>
 #include <Fat16.h>
 #include <Fat16util.h>
-
-#define STATUSLED 13
-#define DEBUG 1
-
-#define UPPIN 4
-#define DOWNPIN 5
-#define BUTTONPIN 6
-
-#define STATIC 0
-#define ROTATING 1
-#define MENU 2
-
-#define rarrow 0x7E
+#include "carputer.h"
 
 TinyGPS gps;
 NewSoftSerial nss(2, 3);
@@ -33,11 +21,10 @@ bool fileisopen;
 char filename[13] = "00000000.txt";
 float prevlat, prevlon;
 int screen = 0;
-byte displaystyle = ROTATING, prevdisplaystyle = ROTATING;
-byte numscreens = 2;
+byte displaystyle = STATIC, prevdisplaystyle;
 unsigned long screenmillis = 0;
 byte upstate, downstate, buttonstate;
-byte curoption = 0;
+byte menulevel, curmenuitem = 0, cursubmenuitem = 0, cursubsubmenuitem = 0;
   
 bool feedgps();
 
@@ -110,51 +97,53 @@ void loop(){
   static byte upcount = 0;
   static byte downcount = 0;
 
-  // Check roller
+  /* Check the rollerball for updates */
   if(digitalRead(UPPIN) == !upstate){
-    if(displaystyle == MENU){
-      upcount++;
-      if(upcount > 5){
-        if(curoption > 0) curoption--;
-        upcount = 0;
+    upcount++;
+    if(upcount > 5){
+      if(displaystyle == MENU){
+        if(menulevel == MAINMENU){
+          if(curmenuitem > 0) curmenuitem--;
+        }
+      }else{
+        if(screen > 0) screen--;
       }
+      upcount = 0;
+      downcount = 0;
     }
     upstate = !upstate;
-#if DEBUG == 1
-    Serial.print("Up! ");
-    Serial.println((int)curoption);
-#endif
   }
   if(digitalRead(DOWNPIN) == !downstate){
-    if(displaystyle == MENU){
-      downcount++;
-      if(downcount > 5){
-        curoption++;
-        downcount = 0;
+    downcount++;
+    if(downcount > 5){
+      if(displaystyle == MENU){
+        if(menulevel == MAINMENU){
+          curmenuitem++;
+        }
+      }else{
+        screen++;
+        if(screen >= NUMSCREENS){
+          screen = NUMSCREENS-1;
+        }
       }
+      upcount = 0;
+      downcount = 0;
     }
     downstate = !downstate;
-#if DEBUG == 1
-    Serial.print("Down! ");
-    Serial.println((int)curoption);
-#endif
   }
   if(digitalRead(BUTTONPIN) == !buttonstate){
     buttonstate = !buttonstate;
     if(buttonstate == LOW){
-#if DEBUG == 1
-      Serial.println("Clicked!");
-#endif
       if(displaystyle != MENU){
         prevdisplaystyle = displaystyle;
         displaystyle = MENU;
       }else{
-        if(curoption == 2){
-          displaystyle = prevdisplaystyle;
-        }
+        menuselected();
       }
     }
   }
+  /* Done checking roller */
+
   
   //while(millis() - start < 1000){
     if(feedgps()){
@@ -190,19 +179,21 @@ void loop(){
     }
 
     if(displaystyle == MENU){
-      showmenu();
+      if(menulevel == MAINMENU) showmenu();
+      else if(menulevel == SUBMENU) showsubmenu();
+      else if(menulevel == SUBSUBMENU) showsubsubmenu();
     }else{
       if(displaystyle == ROTATING){
         curmillis = millis();
         if(curmillis - screenmillis > 5000){
           screen++;
-          screen %= numscreens;
+          screen %= NUMSCREENS;
           screenmillis = curmillis;
         }
       }
 
       /* Display the proper screen */
-      if(screen == 0){
+      if(screen == GENERAL){
         /* Default screen */
         lcdclear();
         tzhour = (hour - 6 + 24) % 24;
@@ -226,7 +217,7 @@ void loop(){
         if(speed < 10) lcd.print(" ");
         lcd.print(speed, 1);
         lcd.print("mph");
-      }else if(screen == 1){
+      }else if(screen == LATLON){
         /* Latitude/Longitude */
         //lcdclear();
         lcdsetpos(0, 0);
@@ -235,6 +226,11 @@ void loop(){
         lcdsetpos(1, 0);
         lcd.print("Lon: ");
         lcdprintdms(lon);
+      }else if(screen == ODOMETER){
+        lcdclear();
+        lcd.print("000000 miles");
+        lcdsetpos(1, 0);
+        lcd.print("(Future Work)");
       }else{
         lcdclear();
         lcd.print("Invalid screen");
@@ -277,41 +273,73 @@ void loop(){
 
 /* Menu Bits */
 void showmenu(){
-  byte numoptions = 3;
   char *options[] = {
     "Display Style",
-    "Nothing",
+    "Version Info",
     "Return"
   };
 
-  if(curoption >= numoptions){
-    curoption = numoptions - 1;
+  menulevel = MAINMENU;
+  
+  if(curmenuitem >= NUMMENUITEMS){
+    curmenuitem = NUMMENUITEMS - 1;
   }
-  if(curoption <=0){
-    curoption = 0;
+  if(curmenuitem <= 0){
+    curmenuitem = 0;
   }
 
   lcdclear();
   lcdsetpos(0, 0);
   lcd.print("  ");
-  if(curoption == 0){
+  if(curmenuitem == 0){
     lcd.print("-Main Menu-");
   }else{
-    lcd.print(options[curoption-1]);
+    lcd.print(options[curmenuitem-1]);
   }
   lcdsetpos(1, 0);
-  lcd.print(rarrow, BYTE);
-  lcd.print(" ");
-  lcd.print(options[curoption]);  
+  lcd.print(rarrow, BYTE);lcd.print(" ");
+  lcd.print(options[curmenuitem]);  
 }
 
-void showsubmenu(byte top){
+void showsubmenu(){
+  menulevel = SUBMENU;
   
+  if(curmenuitem == DISPLAYSTYLE){
+    lcdclear();
+    lcd.print("-Display Style-");
+    lcdsetpos(1, 0);
+    lcd.print(rarrow, BYTE);lcd.print(" ");
+    lcd.print("Return");
+  }
 }
 
-void showsubsubmenu(byte top, byte sub){
-  
+void showsubsubmenu(){
+  menulevel = SUBSUBMENU;  
 }
+
+void menuselected(){
+  if(menulevel == MAINMENU){
+    if(curmenuitem == DISPLAYSTYLE){
+      showsubmenu();
+    }
+    if(curmenuitem == RETURN){
+      curmenuitem = 0;
+      cursubmenuitem = 0;
+      cursubsubmenuitem = 0;
+      displaystyle = prevdisplaystyle;
+    }
+  }else if(menulevel == SUBMENU){
+    if(curmenuitem == DISPLAYSTYLE){
+      if(curmenuitem == SUB1RETURN){
+       curmenuitem = 0;
+        cursubmenuitem = 0;
+        cursubsubmenuitem = 0;
+        menulevel = MAINMENU;
+      }
+    }
+  }
+}
+
 /* End Menu Bits */
 
 bool feedgps()
