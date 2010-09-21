@@ -22,19 +22,5 @@
 #define SUBMENU 1
 #define SUBSUBMENU 2
 
-/* Menu Items */
-#define NUMMENUITEMS 3
-#define DISPLAYSTYLE 0
-#define VERSIONINFO 1
-#define RETURN 2
-
-/* Menu Subitems */
-// DISPLAYSTYLE
-#define SUBSTATIC 0
-#define SUBROTATING 1
-#define SUB1RETURN 0
-
-// VERSIONINFO
-
 /* Extras */
 #define rarrow 0x7E

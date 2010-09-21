@@ -24,9 +24,38 @@ int screen = 0;
 byte displaystyle = STATIC, prevdisplaystyle;
 unsigned long screenmillis = 0;
 byte upstate, downstate, buttonstate;
-byte menulevel, curmenuitem = 0, cursubmenuitem = 0, cursubsubmenuitem = 0;
-  
+
 bool feedgps();
+
+/* Menu Pieces */
+byte menulevel = MAINMENU, curmenuitem = 0, cursubmenuitem = 0, cursubsubmenuitem = 0;
+
+byte nummenuitems = 3;
+char *menuitems[] = {
+  "Display Mode",
+  "Version Info",
+  "Return"
+};
+void (*menucallbacks[])() = {
+  &menunothing,
+  &menunothing,
+  &menureturn
+};
+
+
+int numsubmenuitems[] = {3, 2, 0};
+char *submenuitems[][15] = {
+  {
+    "Rotating",
+    "Static",
+    "Return"
+  }, {
+    "Version 1.0",
+    "Return"
+  }
+};
+
+/* End Menu Pieces */
 
 // SD Helpers
 #if DEBUG == 1
@@ -104,6 +133,8 @@ void loop(){
       if(displaystyle == MENU){
         if(menulevel == MAINMENU){
           if(curmenuitem > 0) curmenuitem--;
+        }else if(menulevel == SUBMENU){
+          if(cursubmenuitem > 0) cursubmenuitem--;
         }
       }else{
         if(screen > 0) screen--;
@@ -118,13 +149,12 @@ void loop(){
     if(downcount > 5){
       if(displaystyle == MENU){
         if(menulevel == MAINMENU){
-          curmenuitem++;
+          if(curmenuitem < nummenuitems-1) curmenuitem++;
+        }else if(menulevel == SUBMENU){
+          if(cursubmenuitem < numsubmenuitems[curmenuitem]-1) cursubmenuitem++;
         }
       }else{
-        screen++;
-        if(screen >= NUMSCREENS){
-          screen = NUMSCREENS-1;
-        }
+        if(screen < NUMSCREENS-1) screen++;
       }
       upcount = 0;
       downcount = 0;
@@ -138,18 +168,18 @@ void loop(){
         prevdisplaystyle = displaystyle;
         displaystyle = MENU;
       }else{
-        menuselected();
+        if(menulevel == MAINMENU){
+          menucallbacks[curmenuitem]();
+        }
       }
     }
   }
   /* Done checking roller */
 
   
-  //while(millis() - start < 1000){
-    if(feedgps()){
-      newdata = true;
-    }
-  //}
+  if(feedgps()){
+    newdata = true;
+  }
   
   if(newdata){
     digitalWrite(STATUSLED, HIGH);
@@ -181,7 +211,6 @@ void loop(){
     if(displaystyle == MENU){
       if(menulevel == MAINMENU) showmenu();
       else if(menulevel == SUBMENU) showsubmenu();
-      else if(menulevel == SUBSUBMENU) showsubsubmenu();
     }else{
       if(displaystyle == ROTATING){
         curmillis = millis();
@@ -271,76 +300,59 @@ void loop(){
   }
 }
 
-/* Menu Bits */
+/* Menu Display */
 void showmenu(){
-  char *options[] = {
-    "Display Style",
-    "Version Info",
-    "Return"
-  };
-
   menulevel = MAINMENU;
   
-  if(curmenuitem >= NUMMENUITEMS){
-    curmenuitem = NUMMENUITEMS - 1;
-  }
-  if(curmenuitem <= 0){
-    curmenuitem = 0;
-  }
-
   lcdclear();
   lcdsetpos(0, 0);
-  lcd.print("  ");
   if(curmenuitem == 0){
-    lcd.print("-Main Menu-");
+    lcd.print("  -Main Menu-");
   }else{
-    lcd.print(options[curmenuitem-1]);
+    lcd.print("  ");
+    lcd.print(menuitems[curmenuitem-1]);
   }
   lcdsetpos(1, 0);
-  lcd.print(rarrow, BYTE);lcd.print(" ");
-  lcd.print(options[curmenuitem]);  
+  lcd.print(rarrow, BYTE); lcd.print(" ");
+  lcd.print(menuitems[curmenuitem]);  
 }
 
 void showsubmenu(){
   menulevel = SUBMENU;
   
-  if(curmenuitem == DISPLAYSTYLE){
-    lcdclear();
-    lcd.print("-Display Style-");
-    lcdsetpos(1, 0);
-    lcd.print(rarrow, BYTE);lcd.print(" ");
-    lcd.print("Return");
+  lcdclear();
+  lcdsetpos(0, 0);
+  if(cursubmenuitem == 0){
+    lcd.print("-");
+    lcd.print(menuitems[curmenuitem]);
+    lcd.print("-");
+  }else{
+    lcd.print("  ");
+    lcd.print(submenuitems[curmenuitem][cursubmenuitem-1]);
   }
+  lcdsetpos(1, 0);
+  lcd.print(rarrow, BYTE); lcd.print(" ");
+  lcd.print(submenuitems[curmenuitem][cursubmenuitem]);
 }
 
-void showsubsubmenu(){
-  menulevel = SUBSUBMENU;  
+/* End Menu Display */
+
+/* Menu Callbacks */
+void menunothing(){
+  return;
 }
 
-void menuselected(){
+void menureturn(){
+  curmenuitem = 0;
+  cursubmenuitem = 0;
   if(menulevel == MAINMENU){
-    if(curmenuitem == DISPLAYSTYLE){
-      showsubmenu();
-    }
-    if(curmenuitem == RETURN){
-      curmenuitem = 0;
-      cursubmenuitem = 0;
-      cursubsubmenuitem = 0;
-      displaystyle = prevdisplaystyle;
-    }
-  }else if(menulevel == SUBMENU){
-    if(curmenuitem == DISPLAYSTYLE){
-      if(curmenuitem == SUB1RETURN){
-       curmenuitem = 0;
-        cursubmenuitem = 0;
-        cursubsubmenuitem = 0;
-        menulevel = MAINMENU;
-      }
-    }
+    displaystyle = prevdisplaystyle;
+  }else{
+    menulevel--;
   }
 }
 
-/* End Menu Bits */
+/* End Menu Callbacks */
 
 bool feedgps()
 {
