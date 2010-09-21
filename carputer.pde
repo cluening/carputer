@@ -28,7 +28,7 @@ byte upstate, downstate, buttonstate;
 bool feedgps();
 
 /* Menu Pieces */
-byte menulevel = MAINMENU, curmenuitem = 0, cursubmenuitem = 0, cursubsubmenuitem = 0;
+byte menulevel = MAINMENU, curmenuitem = 0, cursubmenuitem = 0;
 
 byte nummenuitems = 3;
 char *menuitems[] = {
