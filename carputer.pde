@@ -43,7 +43,7 @@ void (*menucallbacks[])() = {
 };
 
 
-int numsubmenuitems[] = {3, 2, 0};
+byte numsubmenuitems[] = {3, 2, 0};
 char *submenuitems[][15] = {
   {
     "Rotating",
@@ -54,7 +54,6 @@ char *submenuitems[][15] = {
     "Return"
   }
 };
-
 /* End Menu Pieces */
 
 // SD Helpers
@@ -300,59 +299,7 @@ void loop(){
   }
 }
 
-/* Menu Display */
-void showmenu(){
-  menulevel = MAINMENU;
-  
-  lcdclear();
-  lcdsetpos(0, 0);
-  if(curmenuitem == 0){
-    lcd.print("  -Main Menu-");
-  }else{
-    lcd.print("  ");
-    lcd.print(menuitems[curmenuitem-1]);
-  }
-  lcdsetpos(1, 0);
-  lcd.print(rarrow, BYTE); lcd.print(" ");
-  lcd.print(menuitems[curmenuitem]);  
-}
 
-void showsubmenu(){
-  menulevel = SUBMENU;
-  
-  lcdclear();
-  lcdsetpos(0, 0);
-  if(cursubmenuitem == 0){
-    lcd.print("-");
-    lcd.print(menuitems[curmenuitem]);
-    lcd.print("-");
-  }else{
-    lcd.print("  ");
-    lcd.print(submenuitems[curmenuitem][cursubmenuitem-1]);
-  }
-  lcdsetpos(1, 0);
-  lcd.print(rarrow, BYTE); lcd.print(" ");
-  lcd.print(submenuitems[curmenuitem][cursubmenuitem]);
-}
-
-/* End Menu Display */
-
-/* Menu Callbacks */
-void menunothing(){
-  return;
-}
-
-void menureturn(){
-  curmenuitem = 0;
-  cursubmenuitem = 0;
-  if(menulevel == MAINMENU){
-    displaystyle = prevdisplaystyle;
-  }else{
-    menulevel--;
-  }
-}
-
-/* End Menu Callbacks */
 
 bool feedgps()
 {
@@ -363,40 +310,6 @@ bool feedgps()
   }
   return false;
 }
-
-// Some LCD helper functions
-void lcdsetpos(uint8_t row, uint8_t col)
-{
-  int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
-
-  lcdcommand();
-  lcd.print(0x80 | (col + row_offsets[row]), BYTE);
-}
-
-void lcdclear(){
-  lcdcommand();
-  lcd.print(0x01, BYTE);
-}
-
-void lcdcommand(){
-  lcd.print(0xFE, BYTE);
-}
-
-void lcdprintdms(float deg){
-  float min, sec;
-  
-  min = fabs(60.0*(deg - int(deg)));
-  sec = 60.0*(min - int(min));
-  if(deg > 0) lcd.print(" ");
-  if(abs(deg) < 100) lcd.print(" ");
-  if(abs(deg) < 10) lcd.print(" ");
-  lcd.print(int(deg));lcd.print(0xDF, BYTE);
-  if(min < 10) lcd.print("0");
-  lcd.print(int(min));lcd.print("'");
-  if(sec < 10) lcd.print("0");
-  lcd.print(int(sec));lcd.print('"'); 
-}
-// End LCD helper functions
 
 
 // Sets the filename to the given date.  Expects that the character
