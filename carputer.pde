@@ -37,23 +37,34 @@ char *menuitems[] = {
   "Return"
 };
 void (*menucallbacks[])() = {
-  &menunothing,
-  &menunothing,
+  &showsubmenu,
+  &showsubmenu,
   &menureturn
 };
 
 
 byte numsubmenuitems[] = {3, 2, 0};
-char *submenuitems[][15] = {
+char *submenuitems[][3] = {
   {
-    "Rotating",
     "Static",
+    "Rotating",
     "Return"
   }, {
-    "Version 1.0",
+    "Version " VERSION,
     "Return"
   }
 };
+void(*submenucallbacks[][3])() = {
+  {
+    &menusetstatic,
+    &menusetrotating,
+    &menureturn
+  }, {
+    &menunothing,
+    &menureturn
+  }
+};
+
 /* End Menu Pieces */
 
 // SD Helpers
@@ -169,6 +180,8 @@ void loop(){
       }else{
         if(menulevel == MAINMENU){
           menucallbacks[curmenuitem]();
+        }else if(menulevel == SUBMENU){
+          submenucallbacks[curmenuitem][cursubmenuitem]();
         }
       }
     }

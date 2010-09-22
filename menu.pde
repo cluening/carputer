@@ -35,6 +35,16 @@ void showsubmenu(){
 /* End Menu Display */
 
 /* Menu Callbacks */
+void menusetstatic(){
+  displaystyle = STATIC;
+  menureturn();
+}
+
+void menusetrotating(){
+  displaystyle = ROTATING;
+  menureturn();
+}
+
 void menunothing(){
   return;
 }

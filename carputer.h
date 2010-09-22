@@ -1,3 +1,4 @@
+#define VERSION "0.7"
 #define DEBUG 0
 
 /* Pin Definitions */
