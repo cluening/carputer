@@ -137,6 +137,7 @@ void loop(){
   int year; 
   byte month, day, hour, minute, second, tzhour;
   float min, sec;
+  float dist;
 
   static byte upcount = 0;
   static byte downcount = 0;
@@ -289,8 +290,10 @@ void loop(){
       }
     }
     
-    if(calc_dist(prevlat, prevlon, lat, lon) > 10){
-      odometer += 10;
+    dist = calc_dist(prevlat, prevlon, lat, lon);
+    if(dist > 10){
+      if(dist < 500)
+        odometer += dist;
       file.print(lat, 6);      file.print(" ");
       file.print(lon, 6);      file.print(" ");
       file.print(speed, 1);    file.print(" ");
