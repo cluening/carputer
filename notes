@@ -35,11 +35,11 @@ A5
 Data fields
 -----------
 Date
-time
-latitude
-longitude
-speed
+time		GENERAL
+latitude	LATLON
+longitude	LATLON
+speed		GENERAL
 heading
 altitude
-odometer
+odometer	ODOMETER
 

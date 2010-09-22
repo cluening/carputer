@@ -12,7 +12,7 @@
 #include <Fat16util.h>
 #include "carputer.h"
 
-#define VERSION "0.8"
+#define VERSION "Version 0.8.0"
 
 TinyGPS gps;
 NewSoftSerial nss(2, 3);
@@ -55,7 +55,7 @@ char *submenuitems[][3] = {
     "Rotating",
     "Return"
   }, {
-    "Version " VERSION,
+    VERSION,
     "Return"
   }
 };
