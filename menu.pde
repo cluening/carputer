@@ -45,6 +45,11 @@ void menusetrotating(){
   menureturn();
 }
 
+void resetodometer(){
+  odometer = 0;
+  menureturn();
+}
+
 void menunothing(){
   return;
 }

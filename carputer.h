@@ -1,4 +1,3 @@
-#define VERSION "0.7"
 #define DEBUG 0
 
 /* Pin Definitions */
@@ -13,7 +12,7 @@
 #define MENU 2
 
 /* Screens */
-#define NUMSCREENS 2
+#define NUMSCREENS 3
 #define GENERAL 0
 #define LATLON 1
 #define ODOMETER 2

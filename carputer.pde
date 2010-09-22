@@ -12,6 +12,8 @@
 #include <Fat16util.h>
 #include "carputer.h"
 
+#define VERSION "0.8"
+
 TinyGPS gps;
 NewSoftSerial nss(2, 3);
 NewSoftSerial lcd(255, 7);
@@ -24,20 +26,23 @@ int screen = 0;
 byte displaystyle = STATIC, prevdisplaystyle;
 unsigned long screenmillis = 0;
 byte upstate, downstate, buttonstate;
+float odometer = 0;
 
 bool feedgps();
 
 /* Menu Pieces */
 byte menulevel = MAINMENU, curmenuitem = 0, cursubmenuitem = 0;
 
-byte nummenuitems = 3;
+byte nummenuitems = 4;
 char *menuitems[] = {
   "Display Mode",
+  "Reset Odometer",
   "Version Info",
   "Return"
 };
 void (*menucallbacks[])() = {
   &showsubmenu,
+  &resetodometer,
   &showsubmenu,
   &menureturn
 };
@@ -269,9 +274,15 @@ void loop(){
         lcdprintdms(lon);
       }else if(screen == ODOMETER){
         lcdclear();
-        lcd.print("000000 miles");
-        lcdsetpos(1, 0);
-        lcd.print("(Future Work)");
+        lcd.print("-Trip  Odometer-");
+        lcd.print("    ");
+        if(odometer < 528){
+          lcd.print((int)odometer);
+          lcd.print(" ft");
+        }else{
+          lcd.print(odometer/5280.0, 1);
+          lcd.print(" mi");
+        }
       }else{
         lcdclear();
         lcd.print("Invalid screen");
@@ -279,6 +290,7 @@ void loop(){
     }
     
     if(calc_dist(prevlat, prevlon, lat, lon) > 10){
+      odometer += 10;
       file.print(lat, 6);      file.print(" ");
       file.print(lon, 6);      file.print(" ");
       file.print(speed, 1);    file.print(" ");
