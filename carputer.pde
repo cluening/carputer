@@ -267,7 +267,10 @@ void loop(){
         lcd.print(speed, 1);
         lcd.print("mph");
         lcdsetpos(1, 13);
-        lcdprintcourse(course);
+        if(speed > .3)
+          lcdprintheading(course);
+        else
+          lcd.print("---");
       }else if(screen == LATLON){
         /* Latitude/Longitude */
         //lcdclear();

@@ -32,7 +32,7 @@ void lcdprintdms(float deg){
 }
 
 
-void lcdprintcourse(float course){
+void lcdprintheading(float course){
   char *headings[] = {
     "  N", " NE", "  E", " SE", "  S", " SW", "  W", " NW", "  N"
   };
