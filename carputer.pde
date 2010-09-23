@@ -12,7 +12,7 @@
 #include <Fat16util.h>
 #include "carputer.h"
 
-#define VERSION "Version 0.8.0"
+#define VERSION "0.8.0"
 
 TinyGPS gps;
 NewSoftSerial nss(2, 3);
@@ -48,22 +48,24 @@ void (*menucallbacks[])() = {
 };
 
 
-byte numsubmenuitems[] = {3, 2, 0};
-char *submenuitems[][3] = {
+byte numsubmenuitems[] = {3, 0, 2, 0};
+char *submenuitems[][4] = {
   {
     "Static",
     "Rotating",
     "Return"
   }, {
-    VERSION,
+  }, {
+    "Version " VERSION,
     "Return"
   }
 };
-void(*submenucallbacks[][3])() = {
+void(*submenucallbacks[][4])() = {
   {
     &menusetstatic,
     &menusetrotating,
     &menureturn
+  }, {
   }, {
     &menunothing,
     &menureturn
@@ -204,7 +206,7 @@ void loop(){
     gps.f_get_position(&lat, &lon, &age);
     alt = gps.f_altitude() * 3.2808399; // meters to feet
     speed = gps.f_speed_mph();
-    course = gps.course();
+    course = gps.f_course();
     if(speed < 1){
       speed = 0;
     }
@@ -264,6 +266,8 @@ void loop(){
         if(speed < 10) lcd.print(" ");
         lcd.print(speed, 1);
         lcd.print("mph");
+        lcdsetpos(1, 13);
+        lcdprintcourse(course);
       }else if(screen == LATLON){
         /* Latitude/Longitude */
         //lcdclear();

@@ -30,4 +30,11 @@ void lcdprintdms(float deg){
   if(sec < 10) lcd.print("0");
   lcd.print(int(sec));lcd.print('"'); 
 }
-// End LCD helper functions
+
+
+void lcdprintcourse(float course){
+  char *headings[] = {
+    "  N", " NE", "  E", " SE", "  S", " SW", "  W", " NW", "  N"
+  };
+  lcd.print(headings[map(course, 0, 360, 0, 8)]);
+}
