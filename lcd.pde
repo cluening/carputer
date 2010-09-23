@@ -34,7 +34,12 @@ void lcdprintdms(float deg){
 
 void lcdprintheading(float course){
   char *headings[] = {
-    "  N", " NE", "  E", " SE", "  S", " SW", "  W", " NW", "  N"
+    "N", "NNE", "NE", 
+    "ENE", "E", "ESE", 
+    "SE", "SSE", "S", "SSW", "SW", 
+    "WSW", "W", "WNW", 
+    "NW", "NNW", "N"
   };
-  lcd.print(headings[map(course, 0, 360, 0, 8)]);
+
+  lcd.print(headings[map(course, 0, 360, 0, 16)]);
 }
