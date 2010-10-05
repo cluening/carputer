@@ -27,6 +27,7 @@ byte displaystyle = STATIC, prevdisplaystyle;
 unsigned long screenmillis = 0;
 byte upstate, downstate, buttonstate;
 float odometer = 0;
+byte tz = -6;
 
 bool feedgps();
 
@@ -213,6 +214,7 @@ void loop(){
     gps.crack_datetime(&year, &month, &day, &hour, &minute, &second);
 
     if(fileisopen == false && year != 2000){
+      settz();
       setfilename(filename, year, month, day);
 #if DEBUG == 1
       Serial.println(filename);
@@ -245,7 +247,7 @@ void loop(){
       if(screen == GENERAL){
         /* Default screen */
         lcdclear();
-        tzhour = (hour - 6 + 24) % 24;
+        tzhour = (hour + tz + 24) % 24;
         if(tzhour < 10) lcd.print("0");
         if(tzhour > 12){
           lcd.print((int)tzhour - 12);
@@ -346,6 +348,9 @@ bool feedgps()
   return false;
 }
 
+void settz(){
+  tz = -6;
+}
 
 // Sets the filename to the given date.  Expects that the character
 // buffer is already primed with '.txt\0' at the end.
