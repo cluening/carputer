@@ -28,14 +28,14 @@ byte displaystyle = STATIC, prevdisplaystyle;
 unsigned long screenmillis = 0;
 byte upstate, downstate, buttonstate;
 float odometer = 0;
-byte tz = -6;
+int tz = -6;
 
 bool feedgps();
 
 /* Menu Pieces */
 byte menulevel = MAINMENU, curmenuitem = 0, cursubmenuitem = 0;
 
-byte nummenuitems = 4;
+byte nummenuitems = 5;
 char *menuitems[] = {
   "Display Mode",
   "Reset Odometer",
@@ -52,22 +52,23 @@ void (*menucallbacks[])() = {
 };
 
 
-byte numsubmenuitems[] = {3, 0, 2, 0};
+byte numsubmenuitems[] = {3, 0, 5, 2, 0};
 char *submenuitems[][5] = {
   {    // Display Mode
     "Static",
     "Rotating",
     "Return"
   }, { // Reset Odometer
-  }, { // Version Info
+  }, { // Set Timezone
     "-4 (EDT)",
     "-5 (EST/CDT)",
     "-6 (CST/MDT)",
     "-7 (MST/PDT)",
     "-8 (PST)"
-  }, {
+  }, { // Version Info
     "Version " VERSION,
     "Return"
+  }, { // Return
   }
 };
 void(*submenucallbacks[][5])() = {
