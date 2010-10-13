@@ -13,7 +13,7 @@
 #include <EEPROM.h>
 #include "carputer.h"
 
-#define VERSION "0.9.0"
+#define VERSION "0.9.1"
 
 TinyGPS gps;
 NewSoftSerial nss(2, 3);
