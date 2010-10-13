@@ -10,6 +10,7 @@
 #include <TinyGPS.h>
 #include <Fat16.h>
 #include <Fat16util.h>
+#include <EEPROM.h>
 #include "carputer.h"
 
 #define VERSION "0.9.0"
@@ -38,6 +39,7 @@ byte nummenuitems = 4;
 char *menuitems[] = {
   "Display Mode",
   "Reset Odometer",
+  "Set Timezone",
   "Version Info",
   "Return"
 };
@@ -45,29 +47,42 @@ void (*menucallbacks[])() = {
   &showsubmenu,
   &resetodometer,
   &showsubmenu,
+  &showsubmenu,
   &menureturn
 };
 
 
 byte numsubmenuitems[] = {3, 0, 2, 0};
-char *submenuitems[][4] = {
+char *submenuitems[][5] = {
   {    // Display Mode
     "Static",
     "Rotating",
     "Return"
   }, { // Reset Odometer
   }, { // Version Info
+    "-4 (EDT)",
+    "-5 (EST/CDT)",
+    "-6 (CST/MDT)",
+    "-7 (MST/PDT)",
+    "-8 (PST)"
+  }, {
     "Version " VERSION,
     "Return"
   }
 };
-void(*submenucallbacks[][4])() = {
+void(*submenucallbacks[][5])() = {
   {    // Display Mode
     &menusetstatic,
     &menusetrotating,
     &menureturn
   }, { // Reset Odometer
   }, { // Version Info
+    &settz,
+    &settz,
+    &settz,
+    &settz,
+    &settz
+  }, {
     &menunothing,
     &menureturn
   }
@@ -214,7 +229,7 @@ void loop(){
     gps.crack_datetime(&year, &month, &day, &hour, &minute, &second);
 
     if(fileisopen == false && year != 2000){
-      settz();
+      gettz();
       setfilename(filename, year, month, day);
 #if DEBUG == 1
       Serial.println(filename);
@@ -351,8 +366,30 @@ bool feedgps()
   return false;
 }
 
+void gettz(){
+  tz = EEPROM.read(0) - 127;
+}
+
 void settz(){
-  tz = -6;
+  switch(cursubmenuitem){
+    case 0: 
+      tz = -4;
+      break;
+    case 1: 
+      tz = -5;
+      break;
+    case 2: 
+      tz = -6;
+      break;
+    case 3: 
+      tz = -7;
+      break;
+    case 4: 
+      tz = -8;
+      break;
+  }
+  EEPROM.write(0, 127+tz);
+  menureturn();
 }
 
 // Sets the filename to the given date.  Expects that the character
