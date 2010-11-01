@@ -23,7 +23,7 @@ Fat16 file;
 bool fileisopen;
 char filename[13] = "00000000.txt";
 float prevlat, prevlon;
-int screen = 0;
+byte screen = 0;
 byte displaystyle = STATIC, prevdisplaystyle;
 unsigned long screenmillis = 0;
 byte upstate, downstate, buttonstate;
@@ -77,13 +77,13 @@ void(*submenucallbacks[][5])() = {
     &menusetrotating,
     &menureturn
   }, { // Reset Odometer
-  }, { // Version Info
+  }, { // Set Timezone
     &settz,
     &settz,
     &settz,
     &settz,
     &settz
-  }, {
+  }, { // Version Info
     &menunothing,
     &menureturn
   }
@@ -109,7 +109,7 @@ void error_P(const char* str) {
 }
 
 void error_C(const char *str) {
-  digitalWrite(STATUSLED, HIGH);
+  //digitalWrite(STATUSLED, HIGH);
   lcdclear();
   lcd.print("SD Error");
   while(1);
