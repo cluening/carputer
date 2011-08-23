@@ -13,7 +13,7 @@
 #include <EEPROM.h>
 #include "carputer.h"
 
-#define VERSION "0.9.1"
+#define VERSION "0.9.2"
 
 TinyGPS gps;
 NewSoftSerial nss(2, 3);
@@ -140,7 +140,7 @@ void setup(){
 
   lcd.begin(9600);
   lcdclear();
-  lcd.print("Awaiting fix...");
+  lcd.print("Searching...");
 
 #if DEBUG == 1
   Serial.println("Awaiting fix...");
@@ -264,7 +264,7 @@ void loop(){
         /* Default screen */
         lcdclear();
         tzhour = (hour + tz + 24) % 24;
-        if(tzhour < 10) lcd.print("0");
+        if(tzhour < 10) lcd.print(" ");
         if(tzhour > 12){
           lcd.print((int)tzhour - 12);
         }else if(tzhour == 0){
