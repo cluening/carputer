@@ -159,7 +159,7 @@ void loop(){
   float lat, lon;
   float alt, speed, course;
   unsigned long age;
-  int year; 
+  int year, temperature; 
   byte month, day, hour, minute, second, tzhour;
   float min, sec;
   float dist;
@@ -308,12 +308,27 @@ void loop(){
         lcd.print(" ft");
         lcd.print("   ");
         lcd.print("  ");
+        // Temperature //
+        temperature = Thermister(0);
+        if(temperature < 100 && temperature >= 10)
+          lcdsetpos(1, 13);
+        else if(temperature >= 100)
+          lcdsetpos(1, 12);
+        else if(temperature < 10 && temperature >= 0)
+          lcdsetpos(1, 14);
+        else if(temperature < 0 && temperature > -10)
+          lcdsetpos(1, 12);
+        else
+          lcdsetpos(1, 11);
+        lcd.print(temperature);
+/*
         // Heading //
         lcdsetpos(1, 13);
         if(speed > .3)
           lcdprintheading(course);
         else
           lcd.print("---");
+/*
       }else if(screen == LATLON){
         /* Latitude/Longitude */
         //lcdclear();
@@ -432,6 +447,23 @@ void setfilename(char *filename, int year, int month, int day){
     fulltime /= 10;
   }
 }
+
+// Grab the temperature from a thermister and return it in degrees Farenheit
+double Thermister(int input){
+  double temp;
+  double R;
+  double rinf = 0.01261;
+  double B = 4050;
+  
+  //R = 10240000/input - 10000;
+  //R = (10000.0 * 5.0)/(5.0 * (float)input/1024.0) - 10000.0;
+  R = (1024.0 * 10000.0/input) - 10000.0;
+  temp = B/log(R/rinf) - 273.15;
+  temp = (temp*9.0)/5.0 + 32.0;
+  
+  return temp;
+}
+
 
 /*************************************************************************
  * Function to calculate the distance between two waypoints
