@@ -2,7 +2,7 @@
 void showmenu(){
   menulevel = MAINMENU;
   
-  lcdclear();
+  //lcdclear();
   lcdsetpos(0, 0);
   lcd.print("  ");
   if(curmenuitem == 0){
@@ -11,14 +11,14 @@ void showmenu(){
     lcd.print(menuitems[curmenuitem-1]);
   }
   lcdsetpos(1, 0);
-  lcd.print(rarrow, BYTE); lcd.print(" ");
+  lcd.write(rarrow); lcd.print(" ");
   lcd.print(menuitems[curmenuitem]);  
 }
 
 void showsubmenu(){
   menulevel = SUBMENU;
   
-  lcdclear();
+  //lcdclear();
   lcdsetpos(0, 0);
   if(cursubmenuitem == 0){
     lcd.print("-");
@@ -29,7 +29,7 @@ void showsubmenu(){
     lcd.print(submenuitems[curmenuitem][cursubmenuitem-1]);
   }
   lcdsetpos(1, 0);
-  lcd.print(rarrow, BYTE); lcd.print(" ");
+  lcd.write(rarrow); lcd.print(" ");
   lcd.print(submenuitems[curmenuitem][cursubmenuitem]);
 }
 /* End Menu Display */
@@ -55,6 +55,7 @@ void menunothing(){
 }
 
 void menureturn(){
+  lcdclear();
   curmenuitem = 0;
   cursubmenuitem = 0;
   if(menulevel == MAINMENU){

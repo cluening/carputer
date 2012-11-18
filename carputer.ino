@@ -3,10 +3,10 @@
  * ----------------
  * Tracks everywhere the car goes
  * In the future:
- *  - Will interface with the OBD port
+ *  - see trac tickets
  */
 
-#include <NewSoftSerial.h>
+#include <SoftwareSerial.h>
 #include <TinyGPS.h>
 #include <Fat16.h>
 #include <Fat16util.h>
@@ -14,10 +14,11 @@
 #include "carputer.h"
 
 #define VERSION "0.9.2"
+#define DEBUG 0
 
 TinyGPS gps;
-NewSoftSerial nss(2, 3);
-NewSoftSerial lcd(255, 7);
+SoftwareSerial nss(2, 3);
+SoftwareSerial lcd(255, 7);
 SdCard card;
 Fat16 file;
 bool fileisopen;
@@ -30,7 +31,7 @@ byte upstate, downstate, buttonstate;
 float odometer = 0;
 int tz = -6;
 
-bool feedgps();
+static bool feedgps();
 
 /* Menu Pieces */
 byte menulevel = MAINMENU, curmenuitem = 0, cursubmenuitem = 0;
@@ -139,11 +140,16 @@ void setup(){
   buttonstate = HIGH;
 
   lcd.begin(9600);
+  //lcd.write(0x7C); lcd.write(0x10);
+  //lcd.begin(38400);
   lcdclear();
   lcd.print("Searching...");
-
+  
+  // Reactivate gps for listening
+  nss.listen();
+  
 #if DEBUG == 1
-  Serial.println("Awaiting fix...");
+  Serial.println("Searching...");
 #endif
 }
 
@@ -165,6 +171,7 @@ void loop(){
   if(digitalRead(UPPIN) == !upstate){
     upcount++;
     if(upcount > 5){
+      lcdclear();
       if(displaystyle == MENU){
         if(menulevel == MAINMENU){
           if(curmenuitem > 0) curmenuitem--;
@@ -182,6 +189,7 @@ void loop(){
   if(digitalRead(DOWNPIN) == !downstate){
     downcount++;
     if(downcount > 5){
+      lcdclear();
       if(displaystyle == MENU){
         if(menulevel == MAINMENU){
           if(curmenuitem < nummenuitems-1) curmenuitem++;
@@ -199,6 +207,7 @@ void loop(){
   if(digitalRead(BUTTONPIN) == !buttonstate){
     buttonstate = !buttonstate;
     if(buttonstate == LOW){
+      lcdclear();
       if(displaystyle != MENU){
         prevdisplaystyle = displaystyle;
         displaystyle = MENU;
@@ -215,6 +224,9 @@ void loop(){
 
   
   if(feedgps()){
+#if DEBUG == 1
+    Serial.println("New GPS data!");
+#endif
     newdata = true;
   }
   
@@ -262,9 +274,11 @@ void loop(){
       /* Display the proper screen */
       if(screen == GENERAL){
         /* Default screen */
-        lcdclear();
+        //lcdclear();
+        // Time //
         tzhour = (hour + tz + 24) % 24;
-        if(tzhour < 10) lcd.print(" ");
+        if((tzhour < 10) || (tzhour > 12 && tzhour < 22))
+          lcd.print(" ");
         if(tzhour > 12){
           lcd.print((int)tzhour - 12);
         }else if(tzhour == 0){
@@ -280,13 +294,21 @@ void loop(){
         }else{
           lcd.print("am");
         }
+        lcd.print("   ");
+        // Speed //
         lcdsetpos(0, 9);
         if(speed < 10) lcd.print(" ");
         lcd.print(speed, 1);
         lcd.print("mph");
+        // Altitude //
         lcdsetpos(1, 0);
+        if(alt < 10000) lcd.print(" ");
+        if(alt < 1000) lcd.print(" ");
         lcd.print(alt, 0);
         lcd.print(" ft");
+        lcd.print("   ");
+        lcd.print("  ");
+        // Heading //
         lcdsetpos(1, 13);
         if(speed > .3)
           lcdprintheading(course);
@@ -302,7 +324,8 @@ void loop(){
         lcd.print("Lon: ");
         lcdprintdms(lon);
       }else if(screen == ODOMETER){
-        lcdclear();
+        //lcdclear();
+        lcdsetpos(0, 0);
         lcd.print("-Trip  Odometer-");
         lcd.print("    ");
         if(odometer < 528){
@@ -357,7 +380,7 @@ void loop(){
 
 
 
-bool feedgps()
+static bool feedgps()
 {
   while (nss.available())
   {
