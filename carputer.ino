@@ -308,8 +308,10 @@ void loop(){
         lcd.print(" ft");
         lcd.print("   ");
         lcd.print("  ");
+/*
         // Temperature //
         temperature = Thermister(0);
+        //temperature = 65;
         if(temperature < 100 && temperature >= 10)
           lcdsetpos(1, 13);
         else if(temperature >= 100)
@@ -321,14 +323,15 @@ void loop(){
         else
           lcdsetpos(1, 11);
         lcd.print(temperature);
-/*
+        lcd.write(0xDF);
+*/
         // Heading //
         lcdsetpos(1, 13);
         if(speed > .3)
           lcdprintheading(course);
         else
           lcd.print("---");
-/*
+
       }else if(screen == LATLON){
         /* Latitude/Longitude */
         //lcdclear();
